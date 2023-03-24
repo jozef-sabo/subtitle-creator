@@ -87,7 +87,8 @@ def splitter(helper_list: list):
 def create_subtitles():
     subtitle_menus = [
         "1    | Run\n2    | Configure",
-        "1    | Remove first lines\n2    | Remove last lines\n3    | Remove name in replica\n4    | Remove empty lines"
+        "1    | Remove first lines\n2    | Remove last lines\n3    | Remove name in replica\n4    | Remove empty "
+        "lines\n5    | Renumber only"
     ]
 
     path_to_file = input("Enter the path to file: ")
@@ -101,6 +102,7 @@ def create_subtitles():
     remove_last = 0
     remove_name_in_replica = False
     remove_empty_lines = False
+    renumber = False
 
     print(subtitle_menus[0])
     option = int(input("Select the number: "))
@@ -124,16 +126,44 @@ def create_subtitles():
                 remove_empty_lines = not remove_empty_lines
                 print(f"Remove names in replica was set to {remove_empty_lines}")
 
+            if option == 5:
+                renumber = not renumber
+                print(f"Renumber was set to {renumber}")
+
         print(subtitle_menus[0])
         option = int(input("Select the option: "))
 
     path = os.path.dirname(path_to_file)
     filename = os.path.basename(path_to_file).replace(".txt", ".srt")
 
+    if renumber:
+        with open(os.path.join(path, filename), "w+", encoding="ansi") as output_file:
+            while not file_lines[0]:
+                file_lines.pop(0)
+
+            if not file_lines:
+                return
+            line_counter = 1
+            if file_lines[0].isnumeric():
+                file_lines[0] = line_counter
+
+            output_file.write(f"{file_lines[0]}\n")
+
+            for line_index in range(1, len(file_lines)):
+                if not file_lines[line_index - 1] and file_lines[line_index].isnumeric():
+                    line_counter += 1
+                    file_lines[line_index] = line_counter
+                output_file.write(f"{file_lines[line_index]}\n")
+            output_file.write("\n")
+        return
+
     offset = -remove_first
-    with open(os.path.join(path, filename), "w+", encoding="utf-8") as output_file:
+    with open(os.path.join(path, filename), "w+", encoding="ansi") as output_file:
         for line_number in range(remove_first, len(file_lines) - remove_last):
             if remove_name_in_replica:
+                if file_lines[line_number].isupper():
+                    file_lines[line_number] = ""
+
                 list_to_remove = file_lines[line_number].split(":")
                 if len(list_to_remove) > 1:
                     list_to_remove.pop(0)
